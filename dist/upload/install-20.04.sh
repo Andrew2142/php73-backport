@@ -15,7 +15,7 @@ WHY THIS EXISTS
   The fix for php2shell is in PHP 7.3.33-35 from Ondrej Sury, but Sury only publishes it for
   Ubuntu 22.04/24.04 and Debian 11-13. Ubuntu 18.04 and 20.04 (PHP 7.3 from ppa:ondrej/php) and
   Debian 10 (PHP 7.3 is its own default PHP) have no fixed package. This repo is Sury's 7.3.33-35
-  source rebuilt unchanged for Ubuntu 20.04 (versions end in +ubuntu20.04.1+backport1), against the
+  source rebuilt unchanged for Ubuntu 20.04 (versions end in +ubuntu20.04.1+backport2), against the
   distribution's own build tools, so the telemetry build flags in Sury's newer php-common are not
   compiled in: nothing here contacts any outside host. Your php-common is not changed, so PHP
   extensions from other packages (php-imagick, php-redis, php-memcached, ...) keep working.
@@ -389,7 +389,7 @@ $(grep -E '^ |^E:' <<< "$err" | head -5)
 fi
 
 # --- 3. update ---
-if fixed; then
+if fixed && ! dpkg --compare-versions "$cur" lt "$cand"; then
 	say "PHP 7.3 already has the fix ($cur)"
 else
 	pkgs="$(php_pkgs | paste -sd' ' -)"

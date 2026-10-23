@@ -379,7 +379,7 @@ $(grep -E '^ |^E:' <<< "$err" | head -5)
 fi
 
 # --- 3. update ---
-if fixed; then
+if fixed && ! dpkg --compare-versions "$cur" lt "$cand"; then
 	say "PHP 7.3 already has the fix ($cur)"
 else
 	pkgs="$(php_pkgs | paste -sd' ' -)"

@@ -1,6 +1,7 @@
 # php73-backport
 
 [![verify](https://github.com/Andrew2142/php73-backport/actions/workflows/verify.yml/badge.svg)](https://github.com/Andrew2142/php73-backport/actions/workflows/verify.yml)
+[![reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml/badge.svg)](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml)
 
 PHP 7.3.33-35 (the php2shell fix, [CVE-2026-109618](https://www.cve.org/CVERecord?id=CVE-2026-109618) /
 [CVE-2026-109619](https://www.cve.org/CVERecord?id=CVE-2026-109619)) rebuilt unchanged from
@@ -52,6 +53,21 @@ bash verify.sh --all
 
 Checks every signature and checksum, and that the source, the release and the hosted files all match.
 php7.3 is built from Surý's source with no changes; only the version suffix differs.
+
+## Don't trust us, check
+
+The packages are reproducible: building Surý's source with `build.sh` gives byte-identical .debs on
+any machine. Two ways to check:
+
+```bash
+bash reproduce.sh focal     # rebuild here (docker, ~20 min) and compare every published .deb
+gh attestation verify php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb -R Andrew2142/php73-backport
+```
+
+The second shows the file was built by the public
+[reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) workflow on
+GitHub's runners. That workflow rebuilds all three systems on every change and monthly, and fails if a
+single byte differs.
 
 ## Not covered
 

@@ -17,9 +17,9 @@ ROOT="${1:-}"; ROOT="${ROOT%/}"
 export GNUPGHOME="${GNUPGHOME:-$HOME/.php73-backport-gnupg}"
 FPR=9B95FAF14F9E8D38793D1E2717256F38D05BA5EF
 # codename  os  version  name  script  package revision
-TARGETS="bionic ubuntu 18.04 Ubuntu_18.04 install-18.04.sh ubuntu18.04.1+backport1
-focal ubuntu 20.04 Ubuntu_20.04 install-20.04.sh ubuntu20.04.1+backport1
-buster debian 10 Debian_10 install-debian-10.sh debian10.1+backport1"
+TARGETS="bionic ubuntu 18.04 Ubuntu_18.04 install-18.04.sh ubuntu18.04.1+backport2
+focal ubuntu 20.04 Ubuntu_20.04 install-20.04.sh ubuntu20.04.1+backport2
+buster debian 10 Debian_10 install-debian-10.sh debian10.1+backport2"
 
 # The servers' apt source is "ROOT/ CODENAME/" (object storage refuses the /./ that a "URL ./" source puts
 # in URLs), so package paths in Packages are relative to ROOT: CODENAME/x.deb

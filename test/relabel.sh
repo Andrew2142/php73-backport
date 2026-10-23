@@ -5,7 +5,7 @@ set -euo pipefail
 mkdir -p /old /tmp/rl
 for d in /debs/*.deb; do
 	r=/tmp/rl/x; rm -rf $r; dpkg-deb -R "$d" $r
-	sed -i -E 's/7\.3\.33-35\+ubuntu[0-9.]+\.1\+backport1/7.3.33-8+ubuntu1/g; s/2:101\+ubuntu[0-9.]+\.1\+backport1/2:100+ubuntu1/g; s/^(Version: )101\+ubuntu[0-9.]+\.1\+backport1/\1100+ubuntu1/' $r/DEBIAN/control
+	sed -i -E 's/7\.3\.33-35\+ubuntu[0-9.]+\.1\+backport[0-9]*/7.3.33-8+ubuntu1/g; s/2:101\+ubuntu[0-9.]+\.1\+backport[0-9]*/2:100+ubuntu1/g; s/^(Version: )101\+ubuntu[0-9.]+\.1\+backport[0-9]*/\1100+ubuntu1/' $r/DEBIAN/control
 	for c in $r/usr/share/doc/*/changelog.Debian.gz; do
 		[ -f "$c" ] && zcat "$c" | grep -v 'CVE-2026-10961[89]' | gzip -9n > "$c.n" && mv "$c.n" "$c"
 	done
