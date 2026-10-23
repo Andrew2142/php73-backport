@@ -45,26 +45,18 @@ Key fingerprint: `9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF`. The key i
 It backs up your current PHP, upgrades only the PHP 7.3 packages you have, and restarts PHP-FPM /
 Apache / nginx. The repo is apt-pinned to PHP 7.3 packages only. Undo with `--restore`.
 
-## Verify
-
-```bash
-bash verify.sh --all
-```
-
-Checks every signature and checksum, and that the source, the release and the hosted files all match.
-php7.3 is built from Surý's source with no changes; only the version suffix differs.
-
 ## Don't trust us, check
 
-The packages are reproducible: building Surý's source with `build.sh` gives byte-identical .debs on
-any machine. Two ways to check:
+php7.3 is built from Surý's source with no changes; only the version suffix differs. The build is
+reproducible, so you can check that yourself:
 
 ```bash
-bash reproduce.sh focal     # rebuild here (docker, ~20 min) and compare every published .deb
+bash verify.sh --all        # signatures, checksums, source identical to packages.sury.org, release = hosted files
+bash reproduce.sh focal     # rebuild here (docker, ~20 min) and compare every published .deb byte for byte
 gh attestation verify php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb -R Andrew2142/php73-backport
 ```
 
-The second shows the file was built by the public
+The last one shows the file was built by the public
 [reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) workflow on
 GitHub's runners. That workflow rebuilds all three systems on every change and monthly, and fails if a
 single byte differs.
