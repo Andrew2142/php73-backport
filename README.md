@@ -77,21 +77,27 @@ git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
 bash reproduce.sh focal    # bionic / focal / buster; ends "byte-identical to the rebuild"
 ```
 
-**Compare GitHub and DigitalOcean** The signing key and the checksum list of every published
-file are in both places, and they should be identical:
+**Compare GitHub and DigitalOcean** (optional). The signing key and the list of every published file are kept
+in both places, so you can check that they match.
 
 ```bash
-# signing key
+# Checks that the signing key is the same on GitHub and DigitalOcean
 curl -fsSL https://raw.githubusercontent.com/Andrew2142/php73-backport/main/php73-backport.asc -o key-github.asc
 curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/php73-backport.asc -o key-digitalocean.asc
-cmp key-github.asc key-digitalocean.asc && echo "same key"       # same key
-gpg --show-keys key-github.asc                                    # 9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF
+cmp key-github.asc key-digitalocean.asc && echo "same key"
+gpg --show-keys key-github.asc
+```
 
-# every file
+```bash
+# Checks that every published file is the same on GitHub and DigitalOcean (run next to your clone)
 curl -fsSL https://raw.githubusercontent.com/Andrew2142/php73-backport/main/dist/upload/SHA256SUMS -o sums-github
 curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/SHA256SUMS -o sums-digitalocean
-cmp sums-github sums-digitalocean && echo "same files"           # same files
+cmp sums-github sums-digitalocean && echo "same files"
+(cd php73-backport/dist/upload && sha256sum -c ../../../sums-github)
 ```
+
+The first should print `same key` and the fingerprint `9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF`. The
+second should print `same files`, then `OK` for every file.
 
 ## Not covered
 
