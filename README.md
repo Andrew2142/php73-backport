@@ -75,3 +75,10 @@ bash publish.sh https://your.host/path
 Security problems: see [SECURITY.md](SECURITY.md).
 
 Not affiliated with Ondřej Surý, Debian, Ubuntu or PHP. MIT licensed, no warranty.
+
+## Support Ondřej Surý
+
+None of this exists without [Ondřej Surý](https://github.com/oerdnj), who has packaged PHP for Debian
+and Ubuntu for years and backported the php2shell fix to PHP 7.3 for these packages. If this helped you,
+go support him: [GitHub Sponsors](https://github.com/sponsors/oerdnj) ·
+[Patreon](https://www.patreon.com/oerdnj) · [deb.sury.org](https://deb.sury.org/).
