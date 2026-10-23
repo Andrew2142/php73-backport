@@ -68,7 +68,7 @@ gh attestation verify php73-backport/dist/upload/focal/php7.3-fpm_7.3.33-35+ubun
 
 Every package is [attested](https://github.com/Andrew2142/php73-backport/attestations) by the public
 [reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) build and logged on
-[Sigstore](https://search.sigstore.dev).
+Sigstore's public log ([the entry for the example above](https://search.sigstore.dev/?logIndex=3428188866)).
 
 **Rebuild it yourself** (optional, Docker, ~20 min):
 
