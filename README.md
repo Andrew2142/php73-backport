@@ -77,6 +77,22 @@ git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
 bash reproduce.sh focal    # bionic / focal / buster; ends "byte-identical to the rebuild"
 ```
 
+**Compare GitHub and DigitalOcean** (optional). The signing key and the checksum list of every published
+file are in both places, and they should be identical:
+
+```bash
+# signing key
+curl -fsSL https://raw.githubusercontent.com/Andrew2142/php73-backport/main/php73-backport.asc -o key-github.asc
+curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/php73-backport.asc -o key-digitalocean.asc
+cmp key-github.asc key-digitalocean.asc && echo "same key"       # same key
+gpg --show-keys key-github.asc                                    # 9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF
+
+# every file
+curl -fsSL https://raw.githubusercontent.com/Andrew2142/php73-backport/main/dist/upload/SHA256SUMS -o sums-github
+curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/SHA256SUMS -o sums-digitalocean
+cmp sums-github sums-digitalocean && echo "same files"           # same files
+```
+
 ## Not covered
 
 Other PHP versions, control-panel PHP (cPanel, Plesk, etc.), and CVE-2026-9672 (system libgd3).
