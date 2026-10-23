@@ -6,25 +6,35 @@
 # too, because the new packages need a newer one than these releases have; its php-common.mk loses the
 # telemetry build flags so nothing built against it phones home.
 #
+# The build is reproducible: the base image is pinned by digest, the archives these releases install
+# build dependencies from no longer change, and the date below is fixed (see in-container.sh for how it
+# is used). reproduce.sh checks that a rebuild gives byte-identical .debs.
+#
 # Usage: bash build.sh bionic|focal|buster     (needs docker, about 15 minutes each)
-# Output: dist/php73-<codename>.tar.gz, the .debs for publish.sh
+# Output: dist/php73-<codename>.tar.gz, the .debs for publish.sh (WORK= and DIST= move the work and output
+#         directories; reproduce.sh uses them)
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
 CODENAME="${1:-}"
 case "$CODENAME" in
-	bionic) UB=18.04; IMAGE=ubuntu:18.04; REV=ubuntu18.04.1+backport1 ;;
-	focal)  UB=20.04; IMAGE=ubuntu:20.04; REV=ubuntu20.04.1+backport1 ;;
-	buster) UB=10;    IMAGE=debian:10;    REV=debian10.1+backport1 ;;
+	bionic) UB=18.04; IMAGE=ubuntu:18.04@sha256:152dc042452c496007f07ca9127571cb9c29697f42acbfad72324b2bb2e43c98
+	        REV=ubuntu18.04.1+backport2 ;;
+	focal)  UB=20.04; IMAGE=ubuntu:20.04@sha256:8feb4d8ca5354def3d8fce243717141ce31e2c428701f6682bd2fafe15388214
+	        REV=ubuntu20.04.1+backport2 ;;
+	buster) UB=10;    IMAGE=debian:10@sha256:58ce6f1271ae1c8a2006ff7d3e54e9874d839f573d8009c20154ad0f2fb0a225
+	        REV=debian10.1+backport2 ;;
 	*) echo "usage: bash build.sh bionic|focal|buster"; exit 1 ;;
 esac
+# the changelog date of this release; it is also the build's frozen clock and SOURCE_DATE_EPOCH
+DATE="Fri, 23 Oct 2026 12:00:00 +0000"
 
 SURY=https://packages.sury.org/php/pool/main/p
 PHP_V=7.3.33-35+0~20261021.144+debian11~1.gbpecf76f
 DEF_V=101+0~20261021.78+debian11~1.gbp53f25f
 
-W=$PWD/work/$CODENAME; rm -rf "$W"; mkdir -p "$W/src" "$W/out" dist
+DIST="${DIST:-dist}"; W="${WORK:-$PWD/work}/$CODENAME"; rm -rf "$W"; mkdir -p "$W/src" "$W/out" "$DIST"
 
 fetch() { # pool path, sha256
 	local f="$W/src/$(basename "$1")"
@@ -38,7 +48,9 @@ fetch "php7.3/php7.3_7.3.33.orig.tar.xz.asc"     3d15cc09b4c35343ad15fd80b681f12
 fetch "php-defaults/php-defaults_$DEF_V.dsc"     1284e9d5fc91aaa44957a370f80e95761fef94506a9c88491351018bb6521ffc
 fetch "php-defaults/php-defaults_$DEF_V.tar.xz"  f7e870d79e64db42de25aa2c5939ca92a87840145d61e219d243a3fc0c2167a2
 
-docker run --rm -e REV="$REV" -e CODENAME="$CODENAME" -e UB="$UB" -v "$W:/w" -v "$PWD/in-container.sh:/in-container.sh:ro" \
+# /tmp (where the source is unpacked and built) is a tmpfs: it lists directories in creation order, so
+# phar.phar packs its files in the same order on every machine (on disk the order depends on the filesystem)
+docker run --rm --platform linux/amd64 --tmpfs /tmp:rw,exec,size=8g -e REV="$REV" -e BUILD_DATE="$DATE" -e CODENAME="$CODENAME" -e UB="$UB" -v "$W:/w" -v "$PWD/in-container.sh:/in-container.sh:ro" \
 	"$IMAGE" bash /in-container.sh
 
 # Debian 10 servers usually still point at deb.debian.org, which no longer serves buster, so the
@@ -53,5 +65,5 @@ if [ "$CODENAME" = buster ]; then
 fi
 
 rm -f "$W/out/"*-dbgsym_*.deb   # Debian 10 builds debug symbols too; not shipped
-tar czf "dist/php73-$CODENAME.tar.gz" -C "$W" --transform "s#^out#php73-$CODENAME#" out
-sha256sum "dist/php73-$CODENAME.tar.gz"
+tar czf "$DIST/php73-$CODENAME.tar.gz" -C "$W" --transform "s#^out#php73-$CODENAME#" out
+sha256sum "$DIST/php73-$CODENAME.tar.gz"
