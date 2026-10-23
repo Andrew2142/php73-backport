@@ -15,7 +15,7 @@ cd "$(dirname "$0")"
 
 FPR=9B95FAF14F9E8D38793D1E2717256F38D05BA5EF
 REPO=Andrew2142/php73-backport
-TAG=7.3.33-35-backport1
+TAG=7.3.33-35-backport2
 HOSTED=https://php73-backport.fra1.digitaloceanspaces.com
 SURY=https://packages.sury.org/php/pool/main/p
 U=dist/upload

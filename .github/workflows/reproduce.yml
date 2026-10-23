@@ -1,0 +1,50 @@
+name: reproduce
+
+# Rebuilds every release's .debs from Sury's source on GitHub's runners and checks they are
+# byte-identical to the published ones in dist/upload. When they are, it attests them, so anyone can
+# check a published .deb came out of this public build:
+#   gh attestation verify php7.3-fpm_....deb -R Andrew2142/php73-backport
+
+on:
+  push:
+    branches: [main]
+    paths: [build.sh, in-container.sh, reproduce.sh, 'dist/upload/**', .github/workflows/reproduce.yml]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 1 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        codename: [bionic, focal, buster]
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild and compare with dist/upload/${{ matrix.codename }}
+        run: REPRO_DIR="$RUNNER_TEMP/repro" bash reproduce.sh ${{ matrix.codename }}
+      - name: Keep the rebuilt packages
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: debs-${{ matrix.codename }}
+          path: ${{ runner.temp }}/repro/work/${{ matrix.codename }}/out/*.deb
+          if-no-files-found: ignore
+      - name: Attest the reproduced packages
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            ${{ runner.temp }}/repro/work/${{ matrix.codename }}/out/php7.3*.deb
+            ${{ runner.temp }}/repro/work/${{ matrix.codename }}/out/libapache2-mod-php7.3_*.deb
+            ${{ runner.temp }}/repro/work/${{ matrix.codename }}/out/libphp7.3-embed_*.deb
