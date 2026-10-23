@@ -46,25 +46,12 @@ Apache / nginx. The repo is apt-pinned to PHP 7.3 packages only. Undo with `--re
 
 ## Verify
 
-Everything that was published is in [`dist/upload/`](dist/upload) and on the
-[release](https://github.com/Andrew2142/php73-backport/releases/latest). To check it yourself:
-
 ```bash
-git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
 bash verify.sh --all
 ```
 
-That checks every signature and checksum, that each `.deb` matches its signed apt index, that the
-source in `dist/upload/source/` is byte-identical to what packages.sury.org serves, and that the
-GitHub release and the hosted repo serve exactly the same files. The
-[verify workflow](https://github.com/Andrew2142/php73-backport/actions/workflows/verify.yml) runs
-it on every push and weekly.
-
-What differs from Surý's packages: only the version suffix (`+ubuntu18.04.1+backport1` etc.) and a
-changelog line saying so. php7.3's source is not patched. `build.sh` also builds php-common, with
-the telemetry flags in Surý's `php-common.mk` stripped, but that package is not shipped and the
-installer never touches your php-common. The build aborts if telemetry would end up in php7.3.
-On Debian 10, `dpkg-repack` and `libdpkg-perl` are Debian's own archive packages, unchanged.
+Checks every signature and checksum, and that the source, the release and the hosted files all match.
+php7.3 is built from Surý's source with no changes; only the version suffix differs.
 
 ## Not covered
 
