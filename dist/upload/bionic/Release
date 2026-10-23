@@ -1,0 +1,20 @@
+Codename: bionic/
+Date: Fri, 23 Oct 2026 11:02:15 +0000
+Label: PHP 7.3.33-35 (php2shell fix) for Ubuntu 18.04
+Origin: php73-backport
+MD5Sum:
+ dfa3e40518284458679344ed0fa05c41            47070 Packages
+ 1dea5ae0a659adad1f696e5565164aee            10860 Packages.gz
+ c12182d19526baea69a0f6db26771a0c              133 Release
+SHA1:
+ bee9d3a04e3bf1d04e90169acb575497125113b2            47070 Packages
+ 213c15c80db5fd07b738c0219c69e7e4f9c98931            10860 Packages.gz
+ fca84d0fd991a6c388a35703e649a06237632390              133 Release
+SHA256:
+ 6c24960b31e04ac1c149e02e93250af62f934c8b96b14efa60b4b4febaa52d4c            47070 Packages
+ e915de1c4709c59a1e32335b3a5e4e81d9d66d92e1821ff79dc014c66164ce88            10860 Packages.gz
+ 28e0af727a9fd7f98967ae95d5ca77a54e043187c8bae5ab4ae7beb9f28b0df3              133 Release
+SHA512:
+ cf8e080679c5bb9db133e14c765edf4192d8f16fea361a5589daf84ade8e9723182e6700eba721c16e2205da1b3d604b25b3be2fd40bfa658cfc21e2f27b9ac6            47070 Packages
+ e2850019731817cfa7f2be8e0537c7c13ce27fbb2420b177f0ecbedddad89262faf85d16304ac34d620036dc9f4ddcd0ce2a99b5aac749d63b64d7f5f9b61df9            10860 Packages.gz
+ 70932ed642698b0a049265b3987133c5b264a98bba1f27e4027dd1e26a1b852fb90e2e0d506f79c0ea8611acb8c8b2d0766627895e5795f314d5cd2aaa15d4ce              133 Release

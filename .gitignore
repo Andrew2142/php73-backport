@@ -1,4 +1,5 @@
 work/
-dist/
+dist/*
+!dist/upload/
 logs/
 release/

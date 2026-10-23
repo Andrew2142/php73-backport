@@ -1,0 +1,30 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Codename: buster/
+Date: Fri, 23 Oct 2026 11:02:15 +0000
+Label: PHP 7.3.33-35 (php2shell fix) for Debian 10
+Origin: php73-backport
+MD5Sum:
+ ee5982b4065a336c7bf2c7d81503bff0            51816 Packages
+ e73df3c303cef105f9566b4cac0c42d4            12836 Packages.gz
+ b40a9748dec80d1f67e3d5e09b98d770              130 Release
+SHA1:
+ 7041d6784050befc195656e4e55a1afffc60a170            51816 Packages
+ cf9b916fe494a47d6f41c04c763551c4cd4b0def            12836 Packages.gz
+ 63479231c417a46610d225aabf8ea44a1721a8b7              130 Release
+SHA256:
+ 84a845ecf0fd5c9ae757354dbe3d0b8c498d3f57054402f3713bf5796230f1bc            51816 Packages
+ 76d87b50034899c46b50b1b2507f960a34312b28dbdd7ed48a385f8d24370037            12836 Packages.gz
+ 001ceef06a68ec421d7832f5110e53bd1a515f39f899d9720c3ba52c22c961fb              130 Release
+SHA512:
+ 20202dad56d4efa239e4152f3bffcb8498f29badb4c66eebe578304830efb28d02aec0eaebfd49a15e00a8c8d183d8245b38cf0bbca173c8d82a30f90b0f1f25            51816 Packages
+ 0fd689b70f84476bcbd0fb3fffd43800fa644df40b9b379a70fd0bb1e5d8eca585b1a35ac10ef2173b6d290606c64075b34028b508216740bd8cc36b37ce2885            12836 Packages.gz
+ 9622a56ab5dd027636020c014513408a6c2b881c49fd6ceea1610ca619f22d1f3274fadc4811b2a435f4e91e52034dcc3726e4080ca1935fee861ec3a6876e04              130 Release
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYKAB0WIQSblfrxT56NOHk9HicXJW840Ful7wUCats+twAKCRAXJW840Ful
+72ORAP9InSsvQfeyuslA9G9qVoGILffrkUNMWmNRnbLdrX7K8gD8DIP9tsDZkHY8
+sbdq/GRn7ndwPYbfPaTWvLtowjiQeww=
+=KoyK
+-----END PGP SIGNATURE-----
