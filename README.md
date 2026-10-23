@@ -77,7 +77,7 @@ git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
 bash reproduce.sh focal    # bionic / focal / buster; ends "byte-identical to the rebuild"
 ```
 
-**Compare GitHub and DigitalOcean** (optional). The signing key and the checksum list of every published
+**Compare GitHub and DigitalOcean** The signing key and the checksum list of every published
 file are in both places, and they should be identical:
 
 ```bash
