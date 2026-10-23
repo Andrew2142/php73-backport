@@ -27,6 +27,8 @@ WHAT YOU ARE TRUSTING
   script pins apt (/etc/apt/preferences.d/php73-backport.pref) so this repo can ONLY supply
   php7.3-*, libapache2-mod-php7.3 and libphp7.3-embed (plus, on Debian 10, Debian's own unchanged
   dpkg-repack and libdpkg-perl for the backup) - never any other package, not even php-common.
+  That limits which packages it can supply, not what they can do: like any package, their install
+  scripts run as root.
   Remove the repo at any time with --remove-repo (PHP stays fixed, you just get no further updates).
   Build scripts and the exact Sury source used: https://php73-backport.fra1.digitaloceanspaces.com/source/
 
@@ -47,22 +49,26 @@ WHAT IT DOES, IN ORDER
      build of every PHP 7.3 package installed here; if not, removes the repo again and stops.
   2. Backup: saves the PHP 7.3 packages installed now (as .deb files, made with dpkg-repack) to
      /var/backups/php73-pre-backport, so --restore can put them back exactly. (--no-backup skips it.)
-  3. Update: upgrades only the PHP 7.3 packages already installed. Nothing new is
-     installed, nothing removed, your php.ini and pool files are kept. If the upgrade switched on
-     Apache modules (it can enable mod_php and mpm_prefork on a PHP-FPM server) they are switched
-     back. Then it checks the package changelog lists both CVEs, and that every PHP extension that
-     loaded before (ionCube, imagick, redis, ...) still loads, for the CLI, PHP-FPM and Apache.
-     If one does not, it stops before restarting anything; the old PHP keeps serving.
+  3. Update: upgrades only the PHP 7.3 packages already installed. No PHP package is added or
+     removed (apt may add newer libraries they need), your php.ini and pool files are kept. If the
+     upgrade switched on Apache modules (it can enable mod_php and mpm_prefork on a PHP-FPM server)
+     they are switched back. Then it checks the package changelog lists both CVEs, and that every
+     PHP extension that loaded before (ionCube, imagick, redis, ...) still loads, for the CLI,
+     PHP-FPM and Apache. The packages restart PHP-FPM (and Apache, with mod_php) themselves while
+     upgrading, so if an extension no longer loads the site is already running without it: the
+     script stops and tells you to put the old PHP back with --restore.
   4. Lockdown (asked separately; skip with --no-lockdown). Extra protection on top of the fix:
        - PHP: session.upload_progress.enabled = Off, in /etc/php/7.3/<sapi>/conf.d/zz-php2shell.ini
        - Apache: /etc/apache2/conf-available/zz-php2shell.conf (enabled with a2enconf): request bodies
          capped (LimitRequestBody), and multipart uploads without a Content-Length header (chunked
-         uploads) refused with 403.
-       - nginx: /etc/nginx/conf.d/zz-php2shell.conf: client_max_body_size. Only applies where a
-         server block does not set its own. The chunked-upload rule is Apache-only.
-     The cap is 32MB, or your PHP post_max_size if that is bigger, so uploads your site accepts
-     today keep working. If post_max_size is 0 (unlimited) no cap is set.
-     Each config is tested (apache2ctl -t / nginx -t) and removed again if rejected.
+         uploads) refused with 403. The config is tested (apache2ctl -t) and removed if rejected.
+     The Apache cap is 32MB, or your PHP post_max_size if that is bigger, so PHP form uploads your
+     site accepts today keep working. It applies to every site on this Apache: a non-PHP app, or a
+     PHP PUT/raw upload, bigger than that gets HTTP 413 - raise it in the file above if needed. No
+     cap if post_max_size is 0 (unlimited) or 2GB or more (Apache's maximum).
+     nginx gets nothing: its own client_max_body_size (1MB unless your config raises it) already
+     applies. An nginx size cap written by an earlier version of this script is removed, because
+     it raised that 1MB default.
   5. Restart: PHP-FPM 7.3 and Apache are restarted, nginx reloaded (whichever are running;
      requests in progress are cut), then it checks nothing is still running the old PHP.
      Long-running PHP CLI processes (queue workers, daemons) are not restarted - they are listed
@@ -145,6 +151,13 @@ php_mods() {
 		PHP_INI_SCAN_DIR="/etc/php/7.3/$s/conf.d" php7.3 -c "/etc/php/7.3/$s/php.ini" -m 2>/dev/null | grep -v '^\[' | grep . | sed "s/^/$s:/"
 	done | sort -u
 }
+# PHP startup errors of each SAPI's config (an extension missing or failing to load), as "sapi: message" lines
+load_errors() {
+	local s; for s in $SAPIS; do
+		[ -f "/etc/php/7.3/$s/php.ini" ] || continue
+		PHP_INI_SCAN_DIR="/etc/php/7.3/$s/conf.d" php7.3 -c "/etc/php/7.3/$s/php.ini" -m 2>&1 >/dev/null | grep . | sed "s/^/$s: /"
+	done | sort -u
+}
 # biggest post_max_size of the web SAPIs, in MB (0 = unlimited)
 post_max_mb() {
 	local s v n max=0
@@ -172,6 +185,12 @@ restore_apache_mods() {
 		say "the upgrade disabled Apache module $m, enabling it again"; a2enmod -q "$m" >/dev/null 2>&1
 	done
 	[ "$(apache_mods)" = "$1" ] || die "Apache modules differ from before the upgrade - compare: ls /etc/apache2/mods-enabled (before: $(echo $1))"
+}
+# installed PHP 7.3 packages that have no .deb in the backup
+not_in_backup() {
+	local p; for p in $(php_pkgs); do
+		ls "$BACKUP/${p}_"*.deb >/dev/null 2>&1 || printf ' %s' "$p"
+	done
 }
 remove_lockdown() {
 	a2disconf -q zz-php2shell >/dev/null 2>&1
@@ -248,6 +267,10 @@ if [ $MODE = remove-repo ]; then
 fi
 if [ $MODE = restore ]; then
 	[ -n "$(ls "$BACKUP"/*.deb 2>/dev/null)" ] || die "no backup in $BACKUP"
+	# a PHP 7.3 package installed after the backup has no old version to go back to, and dpkg could not
+	# configure it next to the old php7.3-common
+	missing="$(not_in_backup)"
+	[ -z "$missing" ] || die "the backup has no old version of:$missing (installed after the backup was made) - remove them first (apt-get remove$missing), then run --restore again"
 	echo "This puts back the PHP saved in $BACKUP. PHP will be UNFIXED (vulnerable to php2shell) again."
 	ask "Restore the old PHP?" || { echo "Nothing changed."; exit 2; }
 	apt_wait
@@ -339,21 +362,30 @@ if [[ "$cur" == *+backport* ]]; then
 	say "already on the backport ($cur), no backup needed"
 elif [ $BACKUP_ON -eq 0 ]; then
 	say "backup skipped (--no-backup)"
-elif [ -n "$(ls "$BACKUP"/*.deb 2>/dev/null)" ]; then
-	say "backup already in $BACKUP"
 else
-	say "saving the current PHP packages ($cur) to $BACKUP"
-	if ! command -v dpkg-repack >/dev/null; then
-		err="$(apt-get -y -q install dpkg-repack 2>&1 </dev/null)" || {
-			remove_repo
-			die "could not install dpkg-repack, the backup tool (repo removed again, nothing changed):
+	fresh=0
+	if [ -n "$(ls "$BACKUP"/*.deb 2>/dev/null)" ]; then
+		# an earlier run's backup: add PHP 7.3 packages installed since, so --restore covers them
+		need="$(not_in_backup)"
+		if [ -z "$need" ]; then say "backup already in $BACKUP"
+		else say "adding to the backup in $BACKUP (installed since it was made):$need"; fi
+	else
+		fresh=1; need="php-common $(php_pkgs)"
+		say "saving the current PHP packages ($cur) to $BACKUP"
+	fi
+	if [ -n "$need" ]; then
+		if ! command -v dpkg-repack >/dev/null; then
+			err="$(apt-get -y -q install dpkg-repack 2>&1 </dev/null)" || {
+				remove_repo
+				die "could not install dpkg-repack, the backup tool (repo removed again, nothing changed):
 $(grep -E '^ |^E:' <<< "$err" | head -5)
   Fix this server's apt sources, or run again with --no-backup (then --restore is not possible)"; }
+		fi
+		mkdir -p "$BACKUP"
+		( cd "$BACKUP" && dpkg-repack $need >/dev/null 2>&1 ) \
+			|| { [ $fresh -eq 0 ] || rm -rf "$BACKUP"; remove_repo; die "dpkg-repack failed (repo removed again, nothing changed) - or run again with --no-backup"; }
+		say "saved $(ls "$BACKUP"/*.deb | wc -l) packages"
 	fi
-	mkdir -p "$BACKUP"
-	( cd "$BACKUP" && dpkg-repack php-common $(php_pkgs) >/dev/null 2>&1 ) \
-		|| { rm -rf "$BACKUP"; remove_repo; die "dpkg-repack failed (repo removed again, nothing changed) - or run again with --no-backup"; }
-	say "saved $(ls "$BACKUP"/*.deb | wc -l) packages"
 fi
 
 # --- 3. update ---
@@ -361,24 +393,41 @@ if fixed; then
 	say "PHP 7.3 already has the fix ($cur)"
 else
 	pkgs="$(php_pkgs | paste -sd' ' -)"
-	mods_before="$(php_mods)"; amods_before="$(apache_mods)"
+	mods_before="$(php_mods)"; errs_before="$(load_errors)"; amods_before="$(apache_mods)"
+	restore_hint="$([ -n "$(ls "$BACKUP"/*.deb 2>/dev/null)" ] && echo "put the old PHP back by running this script again with --restore" || echo "there is no backup (--no-backup)")"
 	say "upgrading to $cand: $pkgs"
 	apt_wait
-	apt-get -y -q -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --no-remove \
-		install --only-upgrade $pkgs </dev/null >>/var/log/php2shell-backport-apt.log 2>&1 \
-		|| die "apt failed, see /var/log/php2shell-backport-apt.log$([ $BACKUP_ON -eq 1 ] && echo " (old PHP saved in $BACKUP, put back with --restore)")"
+	if ! apt-get -y -q -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --no-remove \
+		install --only-upgrade $pkgs </dev/null >>/var/log/php2shell-backport-apt.log 2>&1; then
+		say "apt failed, undoing any Apache module changes it made"
+		restore_apache_mods "$amods_before"
+		die "apt failed, see /var/log/php2shell-backport-apt.log - $restore_hint"
+	fi
 	restore_apache_mods "$amods_before"
 	fixed || die "PHP upgraded but its changelog does not list the fix - check $CHANGELOG"
 	lost="$(comm -23 <(echo "$mods_before") <(php_mods))"
-	[ -z "$lost" ] || die "these PHP extensions no longer load after the upgrade (nothing restarted, old PHP still serving): $(echo $lost)$([ $BACKUP_ON -eq 1 ] && echo " - put the old PHP back with --restore")"
+	new_errs="$(comm -13 <(echo "$errs_before") <(load_errors))"
+	[ -z "$lost$new_errs" ] || die "PHP extensions that loaded before do not load with the new PHP:
+$({ echo "$lost" | sed 's/^/     not loaded: /'; echo "$new_errs" | sed 's/^/     /'; } | grep -vE '^ +(not loaded: )?$')
+  The package upgrade has already restarted PHP-FPM / Apache, so the site is running without them now:
+  $restore_hint"
 	say "PHP 7.3 is now $(dpkg-query -W -f='${Version}' php7.3-common), all extensions still load"
 fi
+# also on a re-run, when step 3 had nothing to do
+errs="$(load_errors)"
+[ -z "$errs" ] || warn "PHP reports startup errors (an extension missing or failing to load):
+$(echo "$errs" | sed 's/^/     /')"
 
 # --- 4. lockdown ---
+# earlier versions wrote an nginx client_max_body_size, which raised nginx's 1MB default instead of capping
+if [ -f "$NCONF" ]; then
+	rm -f "$NCONF"; say "removed $NCONF from an earlier run (it raised nginx's 1MB upload limit)"
+fi
 if [ $LOCK -eq 1 ] && ask "Apply the lockdown (upload progress off, request size cap, chunked uploads refused)?"; then
 	remove_lockdown
-	pm=$(post_max_mb); cap=32; [ "$pm" -gt 32 ] && cap=$pm; [ "$pm" -eq 0 ] && cap=0
-	if [ $cap -eq 0 ]; then say "post_max_size is unlimited, so no request size cap"
+	pm=$(post_max_mb); cap=32; [ "$pm" -gt 32 ] && cap=$pm
+	if [ "$pm" -eq 0 ]; then cap=0; say "post_max_size is unlimited, so no request size cap"
+	elif [ $cap -ge 2048 ]; then cap=0; say "post_max_size is ${pm}MB, above Apache's 2GB maximum, so no request size cap"
 	elif [ $cap -gt 32 ]; then say "request size cap ${cap}MB (your post_max_size) instead of 32MB"; fi
 	for s in apache2 fpm cgi; do
 		[ -d "/etc/php/7.3/$s/conf.d" ] || continue
@@ -395,10 +444,6 @@ if [ $LOCK -eq 1 ] && ask "Apply the lockdown (upload progress off, request size
 		  echo '</If>'; } > "$ACONF"
 		a2enconf -q zz-php2shell >/dev/null
 		apache2ctl -t >/dev/null 2>&1 || { a2disconf -q zz-php2shell >/dev/null 2>&1; rm -f "$ACONF"; warn "Apache rejected the lockdown config, left it out: $(apache2ctl -t 2>&1 | tail -1)"; }
-	fi
-	if [ -d /etc/nginx/conf.d ] && command -v nginx >/dev/null && [ $cap -ne 0 ]; then
-		printf '# php2shell lockdown (install-20.04.sh --rollback removes it)\nclient_max_body_size %sm;\n' "$cap" > "$NCONF"
-		nginx -t >/dev/null 2>&1 || { rm -f "$NCONF"; warn "nginx rejected client_max_body_size (probably already set in nginx.conf), left it out"; }
 	fi
 	LOCKED=1; say "lockdown written"
 else

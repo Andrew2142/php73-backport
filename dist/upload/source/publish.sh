@@ -53,7 +53,7 @@ done <<< "$TARGETS"
 # source: the exact Sury source the packages were built from, and the build scripts
 cp work/focal/src/* build.sh in-container.sh install.sh.in publish.sh dist/upload/source/
 gpg --armor --export "$FPR" > dist/upload/php73-backport.asc
-( cd dist/upload && find . -type f ! -name SHA256SUMS | sort | xargs sha256sum > SHA256SUMS
+( cd dist/upload && find . -type f ! -name 'SHA256SUMS*' | sort | xargs sha256sum > SHA256SUMS
   gpg --batch --yes -u "$FPR" --clearsign -o SHA256SUMS.asc SHA256SUMS )
 echo "upload everything in $(pwd)/dist/upload so it is served at $ROOT/"
 echo "key fingerprint: $FPR"
