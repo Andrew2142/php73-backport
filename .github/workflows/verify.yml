@@ -1,0 +1,21 @@
+name: verify
+
+# Re-checks every signature and checksum in dist/upload, that the source is byte-identical to
+# packages.sury.org, and that the GitHub release and the hosted repo serve exactly the same files.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash verify.sh --all
