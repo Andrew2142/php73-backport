@@ -50,35 +50,49 @@ Apache / nginx. The repo is apt-pinned to PHP 7.3 packages only. Undo with `--re
 php7.3 is built from Surý's source with no changes, and the build is reproducible: the same source always
 gives byte-identical packages. These checks prove your files are exactly that. If one fails, don't install.
 
-**Signature** (built into Ubuntu/Debian):
+### Signature
+
+Uses `gpg` and `sha256sum`, built into Ubuntu and Debian. Run it in the folder with your downloaded files.
 
 ```bash
 curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/php73-backport.asc | gpg --import
 curl -fsSLO https://php73-backport.fra1.digitaloceanspaces.com/SHA256SUMS.asc
-gpg --output SHA256SUMS --decrypt SHA256SUMS.asc   # Good signature, key 9B95 FAF1 … D05B A5EF
-sha256sum -c --ignore-missing SHA256SUMS           # OK
+gpg --output SHA256SUMS --decrypt SHA256SUMS.asc
+sha256sum -c --ignore-missing SHA256SUMS
 ```
 
-**Built by GitHub** (optional, needs the [GitHub CLI](https://cli.github.com)). Works on any package; for
-example, from a clone of this repo:
+You should see `Good signature` with the key `9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF`, then
+`OK` for each file.
+
+### Built by GitHub
+
+Optional, needs the [GitHub CLI](https://cli.github.com). Works on any package; for example, from a clone
+of this repo:
 
 ```bash
-gh attestation verify php73-backport/dist/upload/focal/php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb -R Andrew2142/php73-backport   # ✓ Verification succeeded!
+gh attestation verify php73-backport/dist/upload/focal/php7.3-fpm_*.deb -R Andrew2142/php73-backport
 ```
 
-Every package is [attested](https://github.com/Andrew2142/php73-backport/attestations) by the public
-[reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) build and logged on
-Sigstore's public log ([the entry for the example above](https://search.sigstore.dev/?logIndex=3428188866)).
+You should see `✓ Verification succeeded!`. Every package is
+[attested](https://github.com/Andrew2142/php73-backport/attestations) by the public
+[reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) build and logged
+on Sigstore's public log ([example](https://search.sigstore.dev/?logIndex=3428188866)).
 
-**Rebuild it yourself** (optional, Docker, ~20 min):
+### Rebuild it yourself
+
+Optional, needs Docker, takes about 20 minutes.
 
 ```bash
 git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
-bash reproduce.sh focal    # bionic / focal / buster; ends "byte-identical to the rebuild"
+bash reproduce.sh focal     # or bionic, buster
 ```
 
-**Compare GitHub and DigitalOcean** (optional). The signing key and the list of every published file are kept
-in both places, so you can check that they match.
+You should see `byte-identical to the rebuild`.
+
+### Compare GitHub and DigitalOcean
+
+Optional. The signing key and the list of every published file are kept in both places, so you can check
+that they match.
 
 ```bash
 # Checks that the signing key is the same on GitHub and DigitalOcean
@@ -96,8 +110,8 @@ cmp sums-github sums-digitalocean && echo "same files"
 (cd php73-backport/dist/upload && sha256sum -c ../../../sums-github)
 ```
 
-The first should print `same key` and the fingerprint `9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF`. The
-second should print `same files`, then `OK` for every file.
+You should see `same key` with the fingerprint `9B95 FAF1 4F9E 8D38 793D  1E27 1725 6F38 D05B A5EF`, then
+`same files` and `OK` for every file.
 
 ## Not covered
 
