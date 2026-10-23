@@ -1,0 +1,16 @@
+# Test fixture: stock Debian 10 PHP 7.3 (7.3.31-1~deb10u7) from archive.debian.org, the way most people install it
+FROM debian:10
+ENV DEBIAN_FRONTEND=noninteractive
+ARG WEB=apache
+RUN printf 'deb http://archive.debian.org/debian buster main\ndeb http://archive.debian.org/debian buster-updates main\ndeb http://archive.debian.org/debian-security buster/updates main\n' > /etc/apt/sources.list \
+ && apt-get update -qq && apt-get install -y -qq ca-certificates curl procps systemd systemd-sysv gnupg >/dev/null \
+ && if [ "$WEB" = nginx ]; then apt-get install -y -qq nginx php-fpm php-mysql php-gd php-imagick php-xml php-mbstring >/dev/null; \
+    else apt-get install -y -qq apache2 php libapache2-mod-php php-mysql php-gd php-imagick php-xml php-mbstring php-curl >/dev/null; fi \
+ && dpkg-query -W php7.3-common php-common
+RUN if [ "$WEB" = nginx ]; then \
+      printf 'server { listen 80 default_server; root /var/www/html; index index.php;\n location ~ \\.php$ { include snippets/fastcgi-php.conf; fastcgi_pass unix:/run/php/php7.3-fpm.sock; } }\n' > /etc/nginx/sites-enabled/default; \
+    else echo 'ServerName localhost' > /etc/apache2/conf-enabled/servername.conf; fi; \
+    rm -f /var/www/html/index.html /var/www/html/index.nginx-debian.html; \
+    echo '<?php echo PHP_VERSION, " ", extension_loaded("imagick") ? "imagick" : "-", " ", extension_loaded("mysqli") ? "mysqli" : "-";' > /var/www/html/index.php
+STOPSIGNAL SIGRTMIN+3
+CMD ["/lib/systemd/systemd"]
