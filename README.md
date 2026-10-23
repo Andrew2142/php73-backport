@@ -47,19 +47,35 @@ Apache / nginx. The repo is apt-pinned to PHP 7.3 packages only. Undo with `--re
 
 ## Don't trust us, check
 
-php7.3 is built from Surý's source with no changes; only the version suffix differs. The build is
-reproducible, so you can check that yourself:
+php7.3 is built from Surý's source with no changes, and the build is reproducible: the same source always
+gives byte-identical packages. These checks prove your files are exactly that. If one fails, don't install.
+
+**Signature** (built into Ubuntu/Debian):
 
 ```bash
-bash verify.sh --all        # signatures, checksums, source identical to packages.sury.org, release = hosted files
-bash reproduce.sh focal     # rebuild here (docker, ~20 min) and compare every published .deb byte for byte
-gh attestation verify php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb -R Andrew2142/php73-backport
+curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/php73-backport.asc | gpg --import
+curl -fsSLO https://php73-backport.fra1.digitaloceanspaces.com/SHA256SUMS.asc
+gpg --output SHA256SUMS --decrypt SHA256SUMS.asc   # Good signature, key 9B95 FAF1 … D05B A5EF
+sha256sum -c --ignore-missing SHA256SUMS           # OK
 ```
 
-The last one shows the file was built by the public
-[reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) workflow on
-GitHub's runners. That workflow rebuilds all three systems on every change and monthly, and fails if a
-single byte differs.
+**Built by GitHub** (optional, needs the [GitHub CLI](https://cli.github.com)). Works on any package; for
+example, from a clone of this repo:
+
+```bash
+gh attestation verify php73-backport/dist/upload/focal/php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb -R Andrew2142/php73-backport   # ✓ Verification succeeded!
+```
+
+Every package is [attested](https://github.com/Andrew2142/php73-backport/attestations) by the public
+[reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) build and logged on
+[Sigstore](https://search.sigstore.dev).
+
+**Rebuild it yourself** (optional, Docker, ~20 min):
+
+```bash
+git clone https://github.com/Andrew2142/php73-backport && cd php73-backport
+bash reproduce.sh focal    # bionic / focal / buster; ends "byte-identical to the rebuild"
+```
 
 ## Not covered
 
