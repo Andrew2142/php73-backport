@@ -57,7 +57,7 @@ Uses `gpgv` and `sha256sum`, built into Ubuntu and Debian. Run it in the folder 
 ```bash
 curl -fsSL https://php73-backport.fra1.digitaloceanspaces.com/php73-backport.asc | gpg --dearmor > php73-backport.gpg
 curl -fsSLO https://php73-backport.fra1.digitaloceanspaces.com/SHA256SUMS.asc
-gpgv --keyring ./php73-backport.gpg --output sums SHA256SUMS.asc
+gpgv --keyring ./php73-backport.gpg --output sums < SHA256SUMS.asc
 sha256sum -c --ignore-missing sums
 ```
 
