@@ -77,9 +77,12 @@ The `*` fills in the version, so this checks `php7.3-fpm_7.3.33-35+ubuntu20.04.1
 another system or package, change the folder and the name, for example:
 
 ```bash
-php73-backport/dist/upload/bionic/php7.3-fpm_*.deb               # Ubuntu 18.04
-php73-backport/dist/upload/buster/php7.3-fpm_*.deb               # Debian 10
-php73-backport/dist/upload/focal/libapache2-mod-php7.3_*.deb     # Apache module, Ubuntu 20.04
+# Ubuntu 18.04
+gh attestation verify php73-backport/dist/upload/bionic/php7.3-fpm_*.deb -R Andrew2142/php73-backport
+# Debian 10
+gh attestation verify php73-backport/dist/upload/buster/php7.3-fpm_*.deb -R Andrew2142/php73-backport
+# Apache module, Ubuntu 20.04
+gh attestation verify php73-backport/dist/upload/focal/libapache2-mod-php7.3_*.deb -R Andrew2142/php73-backport
 ```
 
 You should see `✓ Verification succeeded!`. Every package is
