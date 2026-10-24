@@ -73,6 +73,15 @@ of this repo:
 gh attestation verify php73-backport/dist/upload/focal/php7.3-fpm_*.deb -R Andrew2142/php73-backport
 ```
 
+The `*` fills in the version, so this checks `php7.3-fpm_7.3.33-35+ubuntu20.04.1+backport2_amd64.deb`. For
+another system or package, change the folder and the name, for example:
+
+```bash
+php73-backport/dist/upload/bionic/php7.3-fpm_*.deb               # Ubuntu 18.04
+php73-backport/dist/upload/buster/php7.3-fpm_*.deb               # Debian 10
+php73-backport/dist/upload/focal/libapache2-mod-php7.3_*.deb     # Apache module, Ubuntu 20.04
+```
+
 You should see `✓ Verification succeeded!`. Every package is
 [attested](https://github.com/Andrew2142/php73-backport/attestations) by the public
 [reproduce](https://github.com/Andrew2142/php73-backport/actions/workflows/reproduce.yml) build and logged
